@@ -52,6 +52,10 @@ func insert(table string, columns []string, values [][]interface{}, connexion Au
 
 	sqlStr += "(" + strings.Join(columns, ",") + ") VALUES "
 
+	if len(values) == 0 {
+		sqlStr += "()"
+	}
+
 	for i, val := range values {
 		sqlStr += "("
 
