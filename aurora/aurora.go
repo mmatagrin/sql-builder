@@ -50,7 +50,7 @@ func ExecuteFile(filePath, separator string, connexion AuroraConnexion) (e ctxer
 			return
 		}
 
-		errCommit := CommitTransaction(awsSession, connexion, transaction)
+		errCommit := CommitTransaction(connexion, transaction)
 		if errCommit != nil {
 			e = ctxerror.Wrap(errCommit, "unable to commit transaction")
 		}
