@@ -1,7 +1,7 @@
 package aurora
 
 import (
-	"sql-builder/lib/structs"
+	"sql-builder/structs"
 )
 
 type AuroraQueryBuilder struct {

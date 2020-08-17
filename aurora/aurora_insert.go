@@ -1,11 +1,11 @@
 package aurora
 
 import (
-		"strings"
 	"fmt"
-	"github.com/mmatagrin/ctxerror"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
-	)
+	"github.com/mmatagrin/ctxerror"
+	"strings"
+)
 
 //TODO replace inserts with the main query builder
 

@@ -2,7 +2,7 @@ package aurora
 
 import (
 	"github.com/mmatagrin/ctxerror"
-	"sql-builder/lib/structs"
+	"sql-builder/structs"
 	"strconv"
 	"strings"
 )
@@ -15,7 +15,7 @@ const (
 	DELETE = "delete"
 )
 type AuroraQuery struct {
-	QueryType QueryType
+	QueryType          QueryType
 	AuroraQueryBuilder AuroraQueryBuilder
 	SqlStr             string
 	parameters         map[string]interface{}

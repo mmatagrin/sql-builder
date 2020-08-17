@@ -1,8 +1,8 @@
 package aurora
 
 import (
-	"github.com/mmatagrin/ctxerror"
 	"fmt"
+	"github.com/mmatagrin/ctxerror"
 )
 
 type AuroraDeleteStruct struct {

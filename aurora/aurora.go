@@ -1,12 +1,12 @@
 package aurora
 
 import (
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/mmatagrin/ctxerror"
-	"github.com/aws/aws-sdk-go/service/rdsdataservice"
 	"github.com/aws/aws-sdk-go/aws"
-	"strings"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/rdsdataservice"
+	"github.com/mmatagrin/ctxerror"
 	"reflect"
+	"strings"
 )
 
 type QueryResult map[string]interface{}
