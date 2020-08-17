@@ -158,15 +158,11 @@ func ParseResults(fields []string, values [][]*rdsdataservice.Field)([]QueryResu
 	return results, nil
 }
 
-func BeginTransaction(connexion AuroraConnexion) (string, error) {
+func BeginTransaction(sess *session.Session, connexion AuroraConnexion) (string, error) {
 	context := ctxerror.SetContext(map[string]interface{}{
 		"connexion": connexion,
 	})
 
-	sess, err := configs.GetAwsSession()
-	if err != nil {
-		return "", err
-	}
 	rdsClient := rdsdataservice.New(sess)
 
 	output, err := rdsClient.BeginTransaction(&rdsdataservice.BeginTransactionInput{
@@ -186,19 +182,15 @@ func BeginTransaction(connexion AuroraConnexion) (string, error) {
 	return *output.TransactionId, nil
 }
 
-func CommitTransaction(connexion AuroraConnexion, transactionId string) error {
+func CommitTransaction(sess *session.Session, connexion AuroraConnexion, transactionId string) error {
 	context := ctxerror.SetContext(map[string]interface{}{
 		"transactionId": transactionId,
 		"connexion": connexion,
 	})
 
-	sess, err := configs.GetAwsSession()
-	if err != nil {
-		return err
-	}
 	rdsClient := rdsdataservice.New(sess)
 
-	_, err = rdsClient.CommitTransaction(&rdsdataservice.CommitTransactionInput{
+	_, err := rdsClient.CommitTransaction(&rdsdataservice.CommitTransactionInput{
 		ResourceArn: aws.String(connexion.ResourceArn),
 		SecretArn: aws.String(connexion.SecretArn),
 		TransactionId: &transactionId,
@@ -214,19 +206,16 @@ func CommitTransaction(connexion AuroraConnexion, transactionId string) error {
 	return nil
 }
 
-func RollbackTransaction(connexion AuroraConnexion, transactionId string) error {
+func RollbackTransaction(sess *session.Session, connexion AuroraConnexion, transactionId string) error {
 	context := ctxerror.SetContext(map[string]interface{}{
 		"transactionId": transactionId,
 		"connexion": connexion,
 	})
 
-	sess, err := configs.GetAwsSession()
-	if err != nil {
-		return err
-	}
+
 	rdsClient := rdsdataservice.New(sess)
 
-	_, err = rdsClient.RollbackTransaction(&rdsdataservice.RollbackTransactionInput{
+	_, err := rdsClient.RollbackTransaction(&rdsdataservice.RollbackTransactionInput{
 		ResourceArn: aws.String(connexion.ResourceArn),
 		SecretArn: aws.String(connexion.SecretArn),
 		TransactionId: &transactionId,

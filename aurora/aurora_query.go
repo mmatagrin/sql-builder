@@ -2,7 +2,7 @@ package aurora
 
 import (
 	"github.com/mmatagrin/ctxerror"
-	structs "github.com/mmatagrin/sql-builder/structs"
+	"github.com/mmatagrin/sql-builder/structs"
 	"strconv"
 	"strings"
 )
