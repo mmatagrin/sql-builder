@@ -5,6 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
 	"github.com/mmatagrin/ctxerror"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 )
@@ -15,6 +17,59 @@ var awsSession *session.Session
 
 func SetAwsSession(sess session.Session) {
 	awsSession = &sess
+}
+
+func ExecuteFile(filePath, separator string, connexion AuroraConnexion) (e ctxerror.CtxErrorTraceI){
+	context := ctxerror.SetContext(map[string]interface{}{})
+
+	file, err := os.Open(filePath)
+	if err != nil{
+		return context.Wrap(err, "unable to open source file")
+	}
+
+	sqlQueriesBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return context.Wrap(err, "unable to read source file")
+	}
+
+	sqlQueries := string(sqlQueriesBytes)
+
+
+	transaction , err := BeginTransaction(connexion)
+	if err != nil {
+		return context.Wrap(err, "enable to start database transaction")
+	}
+
+	defer func() {
+		if e != nil {
+			errRollback := RollbackTransaction(connexion, transaction)
+			if errRollback != nil {
+				e = e.AddError(errRollback, "unable to rollback transaction")
+			}
+
+			return
+		}
+
+		errCommit := CommitTransaction(connexion, transaction)
+		if errCommit != nil {
+			e = ctxerror.Wrap(errCommit, "unable to commit transaction")
+		}
+	}()
+
+	for _, query := range strings.SplitAfter(sqlQueries, separator) {
+		if query == "" {
+			continue
+		}
+
+		_, err = PerformAuroraQuery(query, nil, connexion, &transaction)
+
+		if err != nil {
+			context.AddContext("current_query", string(query))
+			return context.Wrap(err, "unable to perform query")
+		}
+	}
+
+	return nil
 }
 
 func PerformAuroraQuery(query string, parameters map[string]interface{}, connexion AuroraConnexion, transactionId *string) (*rdsdataservice.ExecuteStatementOutput, error) {
