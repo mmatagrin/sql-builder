@@ -128,6 +128,67 @@ func PerformAuroraQuery(query string, parameters map[string]interface{}, connexi
 
 }
 
+func PerformAuroraQueries(query string, parameters []map[string]interface{}, connexion AuroraConnexion, transactionId *string) (*rdsdataservice.BatchExecuteStatementOutput, error) {
+	context := ctxerror.SetContext(map[string]interface{}{
+		"query": query,
+		"parameters": parameters,
+	})
+
+	if awsSession == nil {
+		return nil, context.New("aws session is nil")
+	}
+
+	rdsClient := rdsdataservice.New(awsSession)
+
+	var sqlParams [][]*rdsdataservice.SqlParameter
+	if parameters != nil && len(parameters) != 0 {
+		sqlParams = make([][]*rdsdataservice.SqlParameter, 0, len(parameters))
+
+		for _, rowParameters := range parameters {
+			rowParams := make([]*rdsdataservice.SqlParameter, 0, len(parameters))
+			for key, value := range rowParameters {
+				field, err := valueToRdsField(value)
+				if err != nil {
+					context.AddContext("current_parameter", []interface{}{key, value})
+					return nil, context.Wrap(err, "error converting parameter to Rds field")
+				}
+				param := &rdsdataservice.SqlParameter{
+					Name: aws.String(key),
+					Value: field,
+				}
+				rowParams = append(rowParams, param)
+			}
+
+			sqlParams = append(sqlParams, rowParams)
+		}
+	}
+
+	executeStatementInput := rdsdataservice.BatchExecuteStatementInput{
+		Database: aws.String(connexion.Database),
+		ResourceArn: aws.String(connexion.ResourceArn),
+		SecretArn: aws.String(connexion.SecretArn),
+		Sql: aws.String(query),
+		//Parameters: sqlParams,
+		ParameterSets: sqlParams,
+	}
+
+	if transactionId != nil {
+		executeStatementInput.TransactionId = transactionId
+	}
+
+	res, err := rdsClient.BatchExecuteStatement(&executeStatementInput)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "Communications link failure") {
+			return nil, context.Wrap(err, "RDS database is still waking up, try again in a minute")
+		} else {
+			return nil, context.Wrap(err, "error executing query")
+		}
+	}
+
+	return res, nil
+}
+
 func ParseResults(fields []string, values [][]*rdsdataservice.Field)([]QueryResult, error){
 	context := ctxerror.SetContext(map[string]interface{}{
 		"fields": fields,
